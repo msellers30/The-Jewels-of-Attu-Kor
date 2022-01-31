@@ -954,7 +954,7 @@ namespace Game
             if (nounIndex == 27 && _currentRoom == 13 && _itemLocations[26] == .5)
             {
                 Print("AT FIRST GLANCE THE COMODE CONTAINS NOTHING BUT ORGANIC REMAINS BUT, ON A HUNCH, YOU CHECK OUT THE TANK AND FIND A SIX-PACK OF COORS LIGHT.");
-                _itemLocations[26] = 0;
+                _itemLocations[26] = 13;
                 goto getCommand;
             }
 
@@ -1258,9 +1258,32 @@ namespace Game
 
         getKeys:            // 1530
             //1530 IFR=14ANDR$(R,4)="14"THENPRINT"THE JAILER BEATS YOU WITH HIS BILLY CLUB.":GOTO80
+            if (_currentRoom == 13 && _rooms[_currentRoom, 3] == "14")
+            {
+                Print("THE JAILER BEATS YOU WITH HIS BILLY CLUB.");
+                goto getCommand;
+            }
+
             //1535 IFR=14ANDR$(R,4)="16"THENPRINT"YOU REACH THROUGH THE BARS AND GRAB HIS KEYS (THIS IS ANOTHER FELONY, OF COURSE.)":I(29)=O:R$(R,4)="17":GOTO80
+            if (_currentRoom == 13 && _rooms[_currentRoom, 3] == "16")
+            {
+                Print("YOU REACH THROUGH THE BARS AND GRAB HIS KEYS (THIS IS ANOTHER FELONY, OF COURSE.)");
+                _itemLocations[28] = 0;
+                _rooms[_currentRoom, 3] = "17";
+                goto getCommand;
+            }
+
             //1540 IFI(29)=RTHENI(29)=0: PRINT"TAKEN.":GOTO80
+            if (_itemLocations[28] == _currentRoom)
+            {
+                _itemLocations[28] = 0;
+                Print("Taken.");
+                goto getCommand;
+            }
+
             //1545 PRINT"THERE ARE NO KEYS HERE TO GET.":GOTO80
+            Print("THERE ARE NO KEYS HERE TO GET.");
+            goto getCommand;
 
         processGlue:        // 1550
             //1550 IF(N=6ORN=30)ANDI$(N)="BROKEN BOTTLE"ANDI(N)=0ANDI(15)=0THENPRINT"YOU SUCCESSFULLY MENDED THE BROKEN BOTTLE.":I$(30)="MENDED BOTTLE": GOTO80
