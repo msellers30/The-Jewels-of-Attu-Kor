@@ -59,6 +59,7 @@ namespace Game
             int quarterFlag = 0;
             int cigaretteFlag = 0;
             int bookFlag = 0;
+            int sunDropFlag = 0;
 
             string bottleChoice = string.Empty;
 
@@ -231,7 +232,7 @@ namespace Game
                 case 17:
                     goto processRemove;
                 case 18:
-                    goto processTake;
+                    goto processGet;
                 case 19:
                     goto processKill;
                 case 20:
@@ -1251,10 +1252,39 @@ namespace Game
 
         processDrink:       // 1500
             //1500 IFI(N)<>0THENPRINT"YOU DON'T EVEN HAVE IT.":GOTO80
+            if (!double.IsNaN(_itemLocations[nounIndex]))
+            {
+                Print("YOU DON'T EVEN HAVE IT.");
+                goto getCommand;
+            }
+
             //1503 IF(N=6ORN=30)ANDI(30)=0ANDSF=0THENPRINT"AH!! HOW REFRESHING. AS YOU TURN UP THE BOTTLE, YOU NOTICE A    RATTLING SOUND FROM WITHIN.":SF=1:GOTO80
+            if ((nounIndex == 5 || nounIndex == 29) && double.IsNaN(_itemLocations[29]) && sunDropFlag == 0)
+            {
+                Print("AH!! HOW REFRESHING. AS YOU TURN UP THE BOTTLE, YOU NOTICE A RATTLING SOUND FROM WITHIN.");
+                sunDropFlag = 1;
+                goto getCommand;
+            }
+
             //1504 IFN=30THENPRINT"ITS ALL GONE IDIOT, YOU SHOULD HAVE SAVED SOME FROM THE FIRST   TIME.":GOTO80
+            if (nounIndex == 29 && sunDropFlag == 1)
+            {
+                Print("ITS ALL GONE IDIOT, YOU SHOULD HAVE SAVED SOME FROM THE FIRST TIME.");
+                goto getCommand;
+            }
+
             //1505 IFN<>27THENPRINT"I DON'T THINK THE "N$" WOULD AGREE WITH YOU.":GOTO80
+            if (nounIndex != 26)
+            {
+                Print("I DON'T THINK THE {noun} WOULD AGREE WITH YOU.");
+                goto getCommand;
+            }
+
             //1510 PRINT"YOU DOWN ALL SIX BEERS AND PASS OUT.  YOU SURE COULDN'T HANDLE  YOUR ALCOHOL VERY WELL.  IT SEEMS ALCOHOL POISONING WAS THE     CAUSE OF DEATH.":PRINT"  *** YOU HAVE DIED ***":END 
+            Print("YOU DOWN ALL SIX BEERS AND PASS OUT.  YOU SURE COULDN'T HANDLE  YOUR ALCOHOL VERY WELL.  IT SEEMS ALCOHOL POISONING WAS THE     CAUSE OF DEATH.");
+            Print("  *** YOU HAVE DIED ***");
+            Console.ReadLine();
+            return;
 
         getKeys:            // 1530
             //1530 IFR=14ANDR$(R,4)="14"THENPRINT"THE JAILER BEATS YOU WITH HIS BILLY CLUB.":GOTO80
@@ -1287,32 +1317,127 @@ namespace Game
 
         processGlue:        // 1550
             //1550 IF(N=6ORN=30)ANDI$(N)="BROKEN BOTTLE"ANDI(N)=0ANDI(15)=0THENPRINT"YOU SUCCESSFULLY MENDED THE BROKEN BOTTLE.":I$(30)="MENDED BOTTLE": GOTO80
+            if ((nounIndex == 5 || nounIndex == 29) && _items[nounIndex] == "BROKEN BOTTLE" && double.IsNaN(_itemLocations[nounIndex]) && double.IsNaN(_itemLocations[14]))
+            {
+                Print("YOU SUCCESSFULLY MENDED THE BROKEN BOTTLE.");
+                _items[nounIndex] = "MENDED BOTTLE";
+                goto getCommand;
+            }
+
             //1555 PRINT"CONFUCIOUS SAYS: YOU CAN'T FIX WHAT YOU HAVEN'T BROKEN.":GOTO80
+            Print("CONFUCIOUS SAYS: YOU CAN'T FIX WHAT YOU HAVEN'T BROKEN.");
+            goto getCommand;
 
         processWear:        // 1600
             //1600 IFN=7ANDI(7)=0ANDF1=0THENPRINT"THE CLOTHES FIT NICELY.  YOU LOOK RATHER DAPPER.":F1=1:GOTO80
+            if (nounIndex == 6 && double.IsNaN(_itemLocations[nounIndex]) && clothingFlag == 0)
+            {
+                Print("THE CLOTHES FIT NICELY.  YOU LOOK RATHER DAPPER.");
+                clothingFlag = 1;
+                goto getCommand;
+            }
+
             //1602 IFI(N)<>0THENPRINT"YOU DON'T EVEN HAVE THAT.":GOTO80
+            if (!double.IsNaN(_itemLocations[nounIndex]))
+            {
+                Print("YOU DON'T EVEN HAVE THAT.");
+                goto getCommand;
+            }
+
             //1604 IFN=7ANDI(7)=0ANDF1=1THENPRINT"YOU ALREADY SEEM TO BE DRESSED UP.":GOTO80
+            if (nounIndex == 6 && double.IsNaN(_itemLocations[nounIndex]) && clothingFlag == 1)
+            {
+                Print("YOU ALREADY SEEM TO BE DRESSED UP.");
+                goto getCommand;
+            }
+
             //1610 PRINT"YOU CAN'T WEAR THAT.":GOTO80
+            Print("YOU CAN'T WEAR THAT.");
+            goto getCommand;
 
         processRemove:      // 1620
             //1620 IFN=7ANDI(7)=0ANDF1=1THENPRINT"TOO BAD.  THEY WERE SUCH A NICE FIT.":F1=0:GOTO80
-            //1622 IFI(N)<>0THENPRINT"YOU DON'T EVEN HAVE IT.":GOTO80
-            //1624 IFN=7ANDI(7)=0ANDF1=0THENPRINT"YOU DON'T EVEN HAVE THE CLOTHES ON.":GOTO80
-            //1630 PRINT"YOU CAN'T REMOVE WHAT YOU DON'T HAVE ON.":GOTO80
+            if (nounIndex == 6 && double.IsNaN(_itemLocations[nounIndex]) && clothingFlag == 1)
+            {
+                Print("TOO BAD.  THEY WERE SUCH A NICE FIT.");
+                clothingFlag = 0;
+                goto getCommand;
+            }
 
-        processTake:        // 355 - note: same as Get
+            //1622 IFI(N)<>0THENPRINT"YOU DON'T EVEN HAVE IT.":GOTO80
+            if (!double.IsNaN(_itemLocations[nounIndex]))
+            {
+                Print("YOU DON'T EVEN HAVE IT.");
+                goto getCommand;
+            }
+
+            //1624 IFN=7ANDI(7)=0ANDF1=0THENPRINT"YOU DON'T EVEN HAVE THE CLOTHES ON.":GOTO80
+            if (nounIndex == 6 && double.IsNaN(_itemLocations[nounIndex]) && clothingFlag == 0)
+            {
+                Print("YOU DON'T EVEN HAVE THE CLOTHES ON.");
+                goto getCommand;
+            }
+
+            //1630 PRINT"YOU CAN'T REMOVE WHAT YOU DON'T HAVE ON.":GOTO80
+            Print("YOU CAN'T REMOVE WHAT YOU DON'T HAVE ON.");
+            goto getCommand;
+
         processKill:        // 1640
             //1640 IFN=34ANDR=5THENPRINT"YOU DON'T HAVE A RAT TRAP.":GOTO80
+            if (nounIndex == 33 && _currentRoom == 4)
+            {
+                Print("YOU DON'T HAVE A RAT TRAP.");
+                goto getCommand;
+            }
+
             //1642 IF(N=35ANDR=11)OR(N=36AND(R=1ORR=10))THENPRINT"THE "N$" IS A NINJA MASTER.  YOU ARE PROMPTLY DISPOSED OF.":PRINT"  *** YOU HAVE DIED ***":END 
+            if ((nounIndex == 34 && _currentRoom == 10) || (nounIndex == 35 && (_currentRoom == 0 || _currentRoom == 9)))
+            {
+                Print("THE {noun} IS A NINJA MASTER. YOU ARE PROMPTLY DISPOSED OF.");
+                Print(" * **YOU HAVE DIED * **");
+                Console.ReadLine();
+                return;
+            }
+
             //1644 PRINT"YOU CAN'T DO THAT.":GOTO80
+            Print("YOU CAN'T DO THAT.");
+            goto getCommand;
 
         processReturn:      // 1660
             //1660 IFI(N)<>0THENPRINT"YOU CAN'T RETURN WHAT YOU DON'T HAVE":GOTO80
+            if (!double.IsNaN(_itemLocations[nounIndex]))
+            {
+                Print("YOU CAN'T RETURN WHAT YOU DON'T HAVE");
+                goto getCommand;
+            }
+
             //1662 IFN=3OANDR=10ANDI$(30)<>"BROKEN BOTTLE"ANDI(30)=0THENPRINT"THE CLERK TAKES THE BOTTLE AND HAPPILY GIVES YOU A DIME.":I$(20)="AN OLD DIRTY DIME":I(30)=.8:I(20)=0:GOTO80
+            if (nounIndex == 29 && _currentRoom == 9 && _items[nounIndex] != "BROKEN BOTTLE" && double.IsNaN(_itemLocations[nounIndex]))
+            {
+                Print("THE CLERK TAKES THE BOTTLE AND HAPPILY GIVES YOU A DIME.");
+                _items[19] = "AN OLD DIRTY DIME";
+                _itemLocations[29] = .8;        // hides the sun-drop bottle from the game
+                _itemLocations[19] = double.NaN;
+                goto getCommand;
+            }
+
             //1664 IFN=3OANDR=10ANDI$(30)="BROKEN BOTTLE"THENPRINT"SORRY SIR, WE DON'T ACCEPT BROKEN BOTTLES FOR DEPOSIT, PERHAPS  YOU SHOULD MEND IT.":GOTO80
+            if (nounIndex == 29 && _currentRoom == 9 && _items[nounIndex] == "BROKEN BOTTLE")
+            {
+                Print("SORRY SIR, WE DON'T ACCEPT BROKEN BOTTLES FOR DEPOSIT, PERHAPS  YOU SHOULD MEND IT.");
+                goto getCommand;
+            }
+
             //1666 IFR<>10THENPRINT "NOBODY WANTS THAT.":GOTO80
+            if (_currentRoom != 9)
+            {
+                Print("NOBODY WANTS THAT.");
+                goto getCommand;
+            }
+
             //1668 PRINT"WHY WOULD YOU WANT TO RETURN THAT?": GOTO80
+            Print("WHY WOULD YOU WANT TO RETURN THAT?");
+            goto getCommand;
 
         getBottle:          // 1700
             //1700 IFR=5ANDI(30)=5ANDR$(5,4)="7"THENINPUT"'SUN-DROP' OR 'WINE' BOTTLE";W$:PRINT:GOTO1702
@@ -1379,7 +1504,7 @@ namespace Game
             if (double.IsNaN(_itemLocations[29]) && (nounIndex == 13 || nounIndex == 5 || nounIndex == 29) && _items[29] == "SUN-DROP")
             {
                 Print("THE BOTTLE BREAKS IN HALF REVEALING AN ORANGE JEWEL, WHICH YOU  PROCEED TO TAKE.");
-                _itemLocations[16] = double.NaN;
+                _itemLocations[16] = double.NaN;        // The orange jewel goes in your inventory
                 _items[29] = "BROKEN BOTTLE";
                 _itemLocations[29] = double.NaN;
                 if (nounIndex != 13) goto getCommand; else goto breakAll;
@@ -1423,9 +1548,23 @@ namespace Game
             Print("ALL OF YOUR POSSESSIONS ARE NOW USELESS SO YOU THROW THEM ALL AWAY.");
             goto getCommand;
 
-        winnerWinner:       // 29995
-
-            goto describeRoom;
+        winnerWinner:
+            // 29995 PRINTR$(16, 1)R$(16, 2)
+            // 29996 PRINT: PRINT "PRESS ENTER FOR MORE."
+            // 29997 K$= INKEY$:IFK$= ""THEN29997
+            Print(_rooms[15, 0] + _rooms[15, 1]);
+            Print();
+            Print("PRESS ENTER FOR MORE.");
+            Console.ReadLine();
+            Print();
+            Print("A BLUE FLAME LEAPS FROM THE AMULET TO THE THRONE AND YOU ARE FILLED WITH A MYSTICAL POWER. YOU WALK OVER TO THE THRONE AND  SIT DOWN, IMAGINING YOURSELF AS THE RULER OF THE KNOWN UNIVERSE WHEN ");
+            Print("THE INCAN GOD LINUS APPEARS.  HE GIVES YOU A LAUREL WREATH TO BE WIELDED AS A TOKEN OF GOOD FAITH AS YOU CONQUER THE ASTRALPLANE.");
+            Print();
+            Print("YOU SCORE IS 400 OUT OF A POSSIBLE 400.  YOU HAVE ACHIEVED THE  RANK OF SUPREME ARCHAEOLOGIST.");
+            Print();
+            Print(" --END OF SESSION--");
+            Console.ReadLine();
+            return;
         }
 
         /// <summary>
