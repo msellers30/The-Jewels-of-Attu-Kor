@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd c:\\\\users\\\\msellers1\\\\onedrive - Cox Automotive\\\\Documents\\\\src\\\\The-Jewels-of-Attu-Kor:*)",
+      "WebSearch",
+      "Bash(cd:*)",
+      "Bash(dotnet:*)"
+    ]
+  }
+}

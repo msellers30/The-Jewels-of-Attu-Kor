@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Game
 {
     internal class Ascii
     {
+        static Ascii()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
         internal static string Chr(int p_intByte)
         {
             if ((p_intByte < 0) || (p_intByte > 255))
