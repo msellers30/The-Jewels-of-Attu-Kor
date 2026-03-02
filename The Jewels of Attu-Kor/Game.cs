@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
+﻿using System.Diagnostics;
 
 namespace Game
 {
     internal class Game
     {
-        private int numberOfColumns = Console.WindowWidth;
+        private int numberOfColumns = Console.IsOutputRedirected ? 80 : Console.WindowWidth;
 
         /// <summary>
         /// An array of all the verbs allowed in the game.
@@ -106,7 +102,7 @@ namespace Game
         getCommand:             //80
             Print();
             Console.Write("? ");
-            string command = Console.ReadLine();
+            string command = Console.ReadLine() ?? string.Empty;
 
             if (command.Length == 0)
             {
@@ -456,8 +452,11 @@ namespace Game
             }
 
             //344 PRINT"THE MANHOLE ISN'T OPEN.":GOTO80
-            Print("THE MANHOLE ISN'T OPEN.");
-            goto getCommand;
+            if (noun == "MANHOLE")
+            {
+                Print("THE MANHOLE ISN'T OPEN.");
+                goto getCommand;
+            }
 
             //350 PRINT"YOU CANT CLOSE THE "N$:GOTO70
             Print("YOU CANT CLOSE THE ", noun);
@@ -637,6 +636,7 @@ namespace Game
             if (double.IsNaN(_itemLocations[nounIndex]))
             {
                 Print("DROPPED.");
+                _itemLocations[nounIndex] = _currentRoom;
                 goto getCommand;
             }
 
@@ -681,7 +681,7 @@ namespace Game
         processPut:         // 450
             //450 PRINT"WHERE DO YOU WANT TO PUT THE "N$(N);:INPUTW$:PRINT
             Print("WHERE DO YOU WANT TO PUT THE {0}", noun);
-            string putTarget = Console.ReadLine();
+            string putTarget = Console.ReadLine() ?? string.Empty;
             Print();
 
             //452 IFW$<>"STAND"ANDW$<>"AMULET"THENPRINT"YOU CAN'T PUT THAT THERE.":GOTO80
@@ -816,6 +816,34 @@ namespace Game
             goto getCommand;
 
         processRead:        // 515
+            //515 IFI(N)<>0THENPRINT"YOU DON'T EVEN HAVE IT.":GOTO80
+            if (!double.IsNaN(_itemLocations[nounIndex]))
+            {
+                Print("YOU DON'T EVEN HAVE IT.");
+                goto getCommand;
+            }
+
+            //516 IFN=1THENPRINT"THE BOOK SAYS SOMETHING ABOUT AN ANCIENT LEGEND.  SOMEWHERE,    THERE IS AN AMULET, WHICH, WHEN FITTED WITH TWO JEWELS, GIVES   THE OWNER SUPREME POWER, WHEN SEATED IN THE THRONE OF THE GODS.":GOTO80
+            if (nounIndex == 0)
+            {
+                Print("THE BOOK SAYS SOMETHING ABOUT AN ANCIENT LEGEND.  SOMEWHERE, THERE IS AN AMULET, WHICH, WHEN FITTED WITH TWO JEWELS, GIVES THE OWNER SUPREME POWER, WHEN SEATED IN THE THRONE OF THE GODS.");
+                goto getCommand;
+            }
+            //520 IFN=4THENPRINT"IT TURNS OUT TO BE A COPY OF 'THE MORNING SUN,' THE LOCAL LAPAZ NEWSPAPER.  A FLIER INSIDE TELLS OF A SALE AT JIM DANDY'S.":GOTO80
+            if (nounIndex == 3)
+            {
+                Print("IT TURNS OUT TO BE A COPY OF 'THE MORNING SUN,' THE LOCAL LAPAZ NEWSPAPER.  A FLIER INSIDE TELLS OF A SALE AT JIM DANDY'S.");
+                goto getCommand;
+            }
+            //525 IFN=5THENPRINT"THE POSTCARD TELLS OF THE MANY ARCHAEOLOGICAL WONDERS OF THE    SURROUNDING COUNTRY.":GOTO80
+            if (nounIndex == 4)
+            {
+                Print("THE POSTCARD TELLS OF THE MANY ARCHAEOLOGICAL WONDERS OF THE SURROUNDING COUNTRY.");
+                goto getCommand;
+            }
+            //530 PRINT"THE "N$" DOESN'T SAY ANYTHING.":GOTO80
+            Print($"THE {noun} DOESN'T SAY ANYTHING.");
+            goto getCommand;
 
         openDoor:           // 745
             //745 IFR=12ANDI(29)=0THENR$(R,4)="0":PRINT"YOU USE YOUR STOLEN KEYS TO OPEN THE DOOR TO THE EVIDENCE ROOM.":GOTO80
@@ -1393,7 +1421,7 @@ namespace Game
             //1642 IF(N=35ANDR=11)OR(N=36AND(R=1ORR=10))THENPRINT"THE "N$" IS A NINJA MASTER.  YOU ARE PROMPTLY DISPOSED OF.":PRINT"  *** YOU HAVE DIED ***":END 
             if ((nounIndex == 34 && _currentRoom == 10) || (nounIndex == 35 && (_currentRoom == 0 || _currentRoom == 9)))
             {
-                Print("THE {noun} IS A NINJA MASTER. YOU ARE PROMPTLY DISPOSED OF.");
+                Print($"THE {noun} IS A NINJA MASTER. YOU ARE PROMPTLY DISPOSED OF.");
                 Print(" * **YOU HAVE DIED * **");
                 Console.ReadLine();
                 return;
@@ -1444,7 +1472,7 @@ namespace Game
             if (_currentRoom == 4 && _itemLocations[29] == 4 && _rooms[4, 3] == "7")
             {
                 Console.Write("'SUN-DROP' OR 'WINE' BOTTLE? ");
-                bottleChoice = Console.ReadLine();
+                bottleChoice = Console.ReadLine() ?? string.Empty;
                 Print();
                 goto whichBottle;
             }
@@ -1516,14 +1544,14 @@ namespace Game
             //1754 IFI(N)<>0THENPRINT"YOU DON'T EVEN HAVE THE "N$".":GOTO80
             if (!double.IsNaN(_itemLocations[nounIndex]))
             {
-                Print("YOU DON'T EVEN HAVE THE {0}.", noun);
+                Print($"YOU DON'T EVEN HAVE THE {noun}.");
                 goto getCommand;
             }
 
             //1755 IFI(N)<>0THENPRINT"YOU DON'T EVEN HAVE THE "N$:GOTO80
             if (!double.IsNaN(_itemLocations[nounIndex]))
             {
-                Print("YOU DON'T EVEN HAVE THE {0}", noun);
+                Print($"YOU DON'T EVEN HAVE THE {noun}.");
                 goto getCommand;
             }
         
