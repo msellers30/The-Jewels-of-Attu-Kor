@@ -45,7 +45,7 @@ jobs:
 
       - name: Publish
         run: >
-          dotnet publish "The Jewels of Attu-Kor/The Jewels of Attu-Kor.csproj"
+          dotnet publish "src/The Jewels of Attu-Kor.csproj"
           -c Release
           -r ${{ matrix.rid }}
           --self-contained true
@@ -54,7 +54,7 @@ jobs:
       - name: Zip artifact
         shell: bash
         run: |
-          cd "The Jewels of Attu-Kor/bin/Release/net10.0/${{ matrix.rid }}/publish"
+          cd "src/bin/Release/net10.0/${{ matrix.rid }}/publish"
           zip "$GITHUB_WORKSPACE/The-Jewels-of-Attu-Kor-${{ matrix.rid }}.zip" "${{ matrix.artifact }}"
 
       - uses: actions/upload-artifact@v4
