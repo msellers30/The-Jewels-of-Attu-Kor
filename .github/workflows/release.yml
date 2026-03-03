@@ -55,7 +55,7 @@ jobs:
         shell: bash
         run: |
           cd "src/bin/Release/net10.0/${{ matrix.rid }}/publish"
-          zip "$GITHUB_WORKSPACE/The-Jewels-of-Attu-Kor-${{ matrix.rid }}.zip" "${{ matrix.artifact }}"
+          7z a "$GITHUB_WORKSPACE/The-Jewels-of-Attu-Kor-${{ matrix.rid }}.zip" "${{ matrix.artifact }}"
 
       - uses: actions/upload-artifact@v4
         with:
