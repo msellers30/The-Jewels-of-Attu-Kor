@@ -1,0 +1,85 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag / version (e.g. v1.0.0)'
+        required: true
+      title:
+        description: 'Release title'
+        required: true
+      notes:
+        description: 'Release notes'
+        required: false
+        default: ''
+      prerelease:
+        description: 'Pre-release?'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            artifact: The Jewels of Attu-Kor.exe
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: The Jewels of Attu-Kor
+          - os: macos-latest
+            rid: osx-x64
+            artifact: The Jewels of Attu-Kor
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish
+        run: >
+          dotnet publish "The Jewels of Attu-Kor/The Jewels of Attu-Kor.csproj"
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+
+      - name: Zip artifact
+        shell: bash
+        run: |
+          cd "The Jewels of Attu-Kor/bin/Release/net10.0/${{ matrix.rid }}/publish"
+          zip "$GITHUB_WORKSPACE/The-Jewels-of-Attu-Kor-${{ matrix.rid }}.zip" "${{ matrix.artifact }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.rid }}
+          path: The-Jewels-of-Attu-Kor-${{ matrix.rid }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: ${{ inputs.title }}
+          body: ${{ inputs.notes }}
+          prerelease: ${{ inputs.prerelease }}
+          files: |
+            The-Jewels-of-Attu-Kor-win-x64.zip
+            The-Jewels-of-Attu-Kor-linux-x64.zip
+            The-Jewels-of-Attu-Kor-osx-x64.zip
