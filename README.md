@@ -10,7 +10,8 @@ Download the latest release from the [Releases](../../releases) page. Each relea
 
 - **Windows** (x64) — `The-Jewels-of-Attu-Kor-win-x64.zip`
 - **Linux** (x64) — `The-Jewels-of-Attu-Kor-linux-x64.zip`
-- **macOS** (x64) — `The-Jewels-of-Attu-Kor-osx-x64.zip`
+- **macOS Intel** (x64) — `The-Jewels-of-Attu-Kor-osx-x64.zip`
+- **macOS Apple Silicon** (M1/M2/M3/M4) — `The-Jewels-of-Attu-Kor-osx-arm64.zip`
 
 These are self-contained — no .NET installation required. Download, unzip, and run.
 

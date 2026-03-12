@@ -33,6 +33,9 @@ jobs:
           - os: macos-latest
             rid: osx-x64
             artifact: The Jewels of Attu-Kor
+          - os: macos-latest
+            rid: osx-arm64
+            artifact: The Jewels of Attu-Kor
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -83,3 +86,4 @@ jobs:
             The-Jewels-of-Attu-Kor-win-x64.zip
             The-Jewels-of-Attu-Kor-linux-x64.zip
             The-Jewels-of-Attu-Kor-osx-x64.zip
+            The-Jewels-of-Attu-Kor-osx-arm64.zip
