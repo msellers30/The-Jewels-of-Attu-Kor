@@ -75,7 +75,9 @@ The game understands the following actions:
 
 ## History
 
-*[Add your history and background here.]*
+This game was created by Mark Benderman, Tim Eubanks, Matt Sellers and Shannon Smith in our high school computer programming class in 1987 as our final project. The purpose of the class was to teach the BASIC programming language on the schools Radio Shack TRS-80 computers. We all knew BASIC pretty well and so while the class project was to create a 10 question multiple choice quiz written in BASIC on the topic of our choice, the four of us asked the teacher if we could write a text adventure instead. Of course, she had no idea what a text adventure was, but fortunately she said yes.
+
+The TRS-80 disks were propriatary AFAIK and we had no way of saving the game code, but thankfully Shannon and Mark had the foresight of printing it out. They kept the printout in the bauble storage case for many years until one day someone scanned it and used the OCR from the scanner to turn it back into the original BASIC program. This scanner output is the [original game](docs/original-game.txt) file. I converted it to C# (back when .NET Framework 3.5 was a thing) and recently updated it to .NET 10 Core.
 
 ## Building
 
