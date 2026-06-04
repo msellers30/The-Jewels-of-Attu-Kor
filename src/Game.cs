@@ -102,7 +102,8 @@ namespace Game
         getCommand:             //80
             Print();
             Console.Write("? ");
-            string command = Console.ReadLine() ?? string.Empty;
+            string? command = Console.ReadLine();
+            if (command == null) return;        // EOF: input exhausted (e.g. end of a scripted test session) -> end the game loop cleanly.
 
             if (command.Length == 0)
             {
