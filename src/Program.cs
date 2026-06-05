@@ -5,9 +5,7 @@ namespace Game
 
         static void Main(string[] args)
         {
-            Game game = new Game();
-
-            game.Play();
+            new ConsoleUi().Run(new Game());
         }
     }
 }
