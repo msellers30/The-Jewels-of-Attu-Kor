@@ -2,7 +2,7 @@
 
 namespace Game
 {
-    internal class Game
+    public class Game
     {
         /// <summary>
         /// An array of all the verbs allowed in the game.
@@ -54,7 +54,7 @@ namespace Game
         /// Begins a session: initializes the world and returns the opening room render. The UI then
         /// drives the game by feeding each input line to <see cref="ProcessCommand"/>.
         /// </summary>
-        internal TurnResult Start()
+        public TurnResult Start()
         {
             _state = new GameState();
             Initialize();
@@ -114,7 +114,7 @@ namespace Game
         /// and the two mid-command prompts (PUT destination, SUN-DROP/WINE bottle) suspend the turn
         /// via <see cref="_pending"/> so the next call supplies the answer.
         /// </summary>
-        internal TurnResult ProcessCommand(string input)
+        public TurnResult ProcessCommand(string input)
         {
             _buffer.Clear();
             int shortcutIndex = 0;

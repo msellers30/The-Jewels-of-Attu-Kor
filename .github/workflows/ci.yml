@@ -28,3 +28,8 @@ jobs:
 
       - name: Test
         run: dotnet test "tests/Tests.csproj" --no-build -c Release --verbosity normal
+
+      # Compile-check the Avalonia GUI front-end so it can't silently break. Building it also
+      # restores/builds the referenced game project. (No tests here yet — it's a thin view layer.)
+      - name: Build GUI
+        run: dotnet build "gui/Game.Gui.csproj" -c Release
