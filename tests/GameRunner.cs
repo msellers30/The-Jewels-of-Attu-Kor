@@ -19,8 +19,10 @@ public static class GameRunner
 {
     /// <summary>
     /// Runs one full session, feeding <paramref name="commands"/> as successive input lines, and
-    /// returns everything the game printed. The session ends when input is exhausted (EOF), which
-    /// <see cref="GameClass.Play"/> treats as "quit".
+    /// returns everything the game printed. The session ends when input is exhausted (EOF), which the
+    /// console front-end treats as "quit". This drives the full stack — <see cref="ConsoleUi"/> over
+    /// the <see cref="GameClass"/> engine — so it still exercises prompts, wrapping, and the
+    /// Start()/ProcessCommand() turn loop end to end.
     /// </summary>
     public static string Run(params string[] commands)
     {
@@ -34,7 +36,7 @@ public static class GameRunner
             Console.SetIn(new StringReader(input));
             Console.SetOut(output);
 
-            new GameClass().Play();
+            new Game.ConsoleUi().Run(new GameClass());
 
             return output.ToString();
         }

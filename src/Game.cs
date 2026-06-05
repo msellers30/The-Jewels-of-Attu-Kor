@@ -4,8 +4,6 @@ namespace Game
 {
     internal class Game
     {
-        private int numberOfColumns = Console.IsOutputRedirected ? 80 : Console.WindowWidth;
-
         /// <summary>
         /// An array of all the verbs allowed in the game.
         /// </summary>
@@ -36,41 +34,71 @@ namespace Game
 
         private int _currentRoom;
 
-        internal void Play()
+        // --- Per-session command/parse state, hoisted from Play() locals so it survives across
+        // --- the upcoming ProcessCommand() turn boundary (e.g. the mid-command PUT/bottle prompts
+        // --- need noun/nounIndex from the prior call, and every flag must persist between turns).
+        private string verb = string.Empty;
+        private string noun = string.Empty;
+        private int verbIndex = int.MinValue;
+        private int nounIndex = int.MinValue;
+
+        private int manholeFlag = 0;
+        private int storeFrontFlag = 1;
+        private int jailFlag = 0;
+        private int disguiseFlag = 0;
+        private int clothingFlag = 0;
+        private int amuletFlag = 0;
+        private int quarterFlag = 0;
+        private int cigaretteFlag = 0;
+        private int bookFlag = 0;
+        private int sunDropFlag = 0;
+
+        private string bottleChoice = string.Empty;
+
+        // The destination answer for a suspended PUT command (filled on the resume turn).
+        private string putTarget = string.Empty;
+
+        // Which (if any) mid-command prompt the engine is currently waiting on an answer for.
+        private enum Pending { None, PutTarget, BottleChoice }
+        private Pending _pending = Pending.None;
+
+        // Accumulates a turn's output; the UI layer is responsible for rendering/wrapping it.
+        private readonly System.Text.StringBuilder _buffer = new();
+
+        // A normal turn: hand back the buffered text and whether we're awaiting a mid-command answer.
+        private TurnResult Turn() => new TurnResult(_buffer.ToString(), _currentRoom, _pending != Pending.None, gameOver: false);
+
+        // A terminal turn (death or victory): the session is over.
+        private TurnResult Over() => new TurnResult(_buffer.ToString(), _currentRoom, awaitingInput: false, gameOver: true);
+
+        /// <summary>
+        /// Begins a session: initializes the world and returns the opening room render. The UI then
+        /// drives the game by feeding each input line to <see cref="ProcessCommand"/>.
+        /// </summary>
+        internal TurnResult Start()
         {
             Initialize();
-            string roomDescription;
-            int shortcutIndex;
-            string verb = string.Empty;
-            string noun = string.Empty;
-            int verbIndex = int.MinValue;
-            int nounIndex = int.MinValue;
+            _buffer.Clear();
+            AppendRoomDescription();
+            AppendStatusAndItems();
+            return Turn();
+        }
 
-            int manholeFlag = 0;
-            int storeFrontFlag = 1;
-            int jailFlag = 0;
-            int disguiseFlag = 0;
-            int clothingFlag = 0;
-            int amuletFlag = 0;
-            int quarterFlag = 0;
-            int cigaretteFlag = 0;
-            int bookFlag = 0;
-            int sunDropFlag = 0;
-
-            string bottleChoice = string.Empty;
-
-        describeRoom:   // 70
-            // Print room description.
-
+        /// <summary>Renders the three-line room description (was label 70).</summary>
+        private void AppendRoomDescription()
+        {
             //70 FORI=1TO3:IFR$(R,I)<>""THENPRINTR$(R,I); :NEXT:PRINTELSENEXT:PRINT
-            roomDescription = string.Empty;
+            string roomDescription = string.Empty;
             for (int i = 0; i < 3; i++)
             {
-                roomDescription += _rooms[_currentRoom, i]; 
+                roomDescription += _rooms[_currentRoom, i];
             }
             Print(roomDescription);
+        }
 
-        describeStatus: // 71
+        /// <summary>Renders the room's status line and the list of items present (was label 71).</summary>
+        private void AppendStatusAndItems()
+        {
             // Print any status associated with the room (i.e. The door is open.  The newsstand is empty.)
             //71 IFS$(VAL(R$(R,4)))<>"0"THENPRINTS$(VAL(R$(R,4))):PRINT
             if (_rooms[_currentRoom, 3] != null && status[int.Parse(_rooms[_currentRoom, 3])] != "0")
@@ -97,13 +125,26 @@ namespace Game
             {
                 Print("NOTHING");
             }
+        }
 
-            // Read command.
-        getCommand:             //80
-            Print();
-            Console.Write("? ");
-            string? command = Console.ReadLine();
-            if (command == null) return;        // EOF: input exhausted (e.g. end of a scripted test session) -> end the game loop cleanly.
+        /// <summary>
+        /// Processes a single command line and returns the resulting text + state. This is the old
+        /// Console-driven Play() loop turned inside out: every former "goto getCommand" is a return
+        /// (turn complete), "goto describeRoom"/"describeStatus" append the room render then return,
+        /// and the two mid-command prompts (PUT destination, SUN-DROP/WINE bottle) suspend the turn
+        /// via <see cref="_pending"/> so the next call supplies the answer.
+        /// </summary>
+        internal TurnResult ProcessCommand(string input)
+        {
+            _buffer.Clear();
+            int shortcutIndex = 0;
+            int j = 0;
+
+            // Resume a suspended two-step command, treating this line as its answer.
+            if (_pending == Pending.PutTarget) { _pending = Pending.None; putTarget = input; goto putContinue; }
+            if (_pending == Pending.BottleChoice) { _pending = Pending.None; bottleChoice = input; goto whichBottle; }
+
+            string command = input;
 
             if (command.Length == 0)
             {
@@ -682,7 +723,10 @@ namespace Game
         processPut:         // 450
             //450 PRINT"WHERE DO YOU WANT TO PUT THE "N$(N);:INPUTW$:PRINT
             Print("WHERE DO YOU WANT TO PUT THE {0}", noun);
-            string putTarget = Console.ReadLine() ?? string.Empty;
+            _pending = Pending.PutTarget;   // suspend: the next input line is the destination.
+            return Turn();
+
+        putContinue:        // resumes at 452 with putTarget = the player's answer
             Print();
 
             //452 IFW$<>"STAND"ANDW$<>"AMULET"THENPRINT"YOU CAN'T PUT THAT THERE.":GOTO80
@@ -801,7 +845,7 @@ namespace Game
                 Print();
                 Print("WE TOLD YOU IT CAUSED CANCER. MAYBE IT'S NOT YOUR FAULT, IT'S PROBABLY BEEN BREWING IN YOU FOR YEARS.");
                 Print("*** YOU HAVE DIED ***");
-                return;
+                return Over();
             }
 
             //505 IFN=1ANDI(N)=0THENPRINT"CHAPTER 6 TASTES ESPECIALLY NICE. MAYBE YOU SHOULD ALSO SMOKE THE TABLE OF CONTENTS. THE BOOK IS NOW COMPLETELY USELESS.":BF=BF+1:GOTO80
@@ -1309,8 +1353,7 @@ namespace Game
             //1510 PRINT"YOU DOWN ALL SIX BEERS AND PASS OUT.  YOU SURE COULDN'T HANDLE  YOUR ALCOHOL VERY WELL.  IT SEEMS ALCOHOL POISONING WAS THE     CAUSE OF DEATH.":PRINT"  *** YOU HAVE DIED ***":END 
             Print("YOU DOWN ALL SIX BEERS AND PASS OUT. YOU SURE COULDN'T HANDLE YOUR ALCOHOL VERY WELL. IT SEEMS ALCOHOL POISONING WAS THE CAUSE OF DEATH.");
             Print("  *** YOU HAVE DIED ***");
-            Console.ReadLine();
-            return;
+            return Over();
 
         getKeys:            // 1530
             //1530 IFR=14ANDR$(R,4)="14"THENPRINT"THE JAILER BEATS YOU WITH HIS BILLY CLUB.":GOTO80
@@ -1421,8 +1464,7 @@ namespace Game
             {
                 Print($"THE {noun} IS A NINJA MASTER. YOU ARE PROMPTLY DISPOSED OF.");
                 Print(" ***YOU HAVE DIED * **");
-                Console.ReadLine();
-                return;
+                return Over();
             }
 
             //1644 PRINT"YOU CAN'T DO THAT.":GOTO80
@@ -1469,15 +1511,15 @@ namespace Game
             //1700 IFR=5ANDI(30)=5ANDR$(5,4)="7"THENINPUT"'SUN-DROP' OR 'WINE' BOTTLE";W$:PRINT:GOTO1702
             if (_currentRoom == 4 && _itemLocations[29] == 4 && _rooms[4, 3] == "7")
             {
-                Console.Write("'SUN-DROP' OR 'WINE' BOTTLE? ");
-                bottleChoice = Console.ReadLine() ?? string.Empty;
-                Print();
-                goto whichBottle;
+                Print("'SUN-DROP' OR 'WINE' BOTTLE? ");
+                _pending = Pending.BottleChoice;    // suspend: the next input line chooses the bottle.
+                return Turn();
             }
-            //1701 GOTO1719 
+            //1701 GOTO1719
             goto getUnambiguousBottle;
 
-        whichBottle:        // 1702
+        whichBottle:        // 1702 — resumes with bottleChoice = the player's answer
+            Print();
             //1702 IFW$="SUN-DROP"THENI(30)=0:PRINT"TAKEN.":GOTO80
             if (bottleChoice == "SUN-DROP")
             {
@@ -1578,18 +1620,29 @@ namespace Game
             // 29995 PRINTR$(16, 1)R$(16, 2)
             // 29996 PRINT: PRINT "PRESS ENTER FOR MORE."
             // 29997 K$= INKEY$:IFK$= ""THEN29997
+            // NOTE: the original "PRESS ENTER FOR MORE." beat used two Console.ReadLine() pauses to
+            // page the ending. Pauses are a UI concern now, so the engine emits the full victory text in
+            // one terminal turn; a UI can still choose to page it on the "PRESS ENTER FOR MORE." marker.
             Print(_rooms[15, 0] + _rooms[15, 1]);
             Print();
             Print("PRESS ENTER FOR MORE.");
-            Console.ReadLine();
             Print();
             Print("A BLUE FLAME LEAPS FROM THE AMULET TO THE THRONE AND YOU ARE FILLED WITH A MYSTICAL POWER. YOU WALK OVER TO THE THRONE AND SIT DOWN, IMAGINING YOURSELF AS THE RULER OF THE KNOWN UNIVERSE WHEN THE INCAN GOD LINUS APPEARS. HE GIVES YOU A LAUREL WREATH TO BE WIELDED AS A TOKEN OF GOOD FAITH AS YOU CONQUER THE ASTRALPLANE.");
             Print();
             Print("YOU SCORE IS 400 OUT OF A POSSIBLE 400. YOU HAVE ACHIEVED THE RANK OF SUPREME ARCHAEOLOGIST.");
             Print();
             Print(" --END OF SESSION--");
-            Console.ReadLine();
-            return;
+            return Over();
+
+        // --- Turn-boundary labels (relocated from the old top-of-loop). Reached only via goto. -----
+        getCommand:             // 80 — command handled; hand the turn's text back and await the next line.
+            return Turn();
+
+        describeRoom:           // 70 — re-render the room (after a move or HELP), then end the turn.
+            AppendRoomDescription();
+        describeStatus:         // 71 — re-render just status + items (fall-through preserved), then end.
+            AppendStatusAndItems();
+            goto getCommand;
         }
 
         /// <summary>
@@ -1715,9 +1768,11 @@ namespace Game
         {
         }
 
+        // The engine no longer writes to the console or wraps text; it appends logical lines to the
+        // turn buffer. Word-wrapping to the terminal width is the UI layer's job (see ConsoleUi).
         private void Print()
         {
-            Console.WriteLine();
+            _buffer.AppendLine();
         }
 
         private void Print(string buffer, params object[] args)
@@ -1727,31 +1782,7 @@ namespace Game
 
         private void Print(string buffer)
         {
-            while (buffer.Length > 0)
-            {
-                if (buffer.Length <= numberOfColumns)
-                {
-                    Console.WriteLine(buffer);
-                    buffer = string.Empty;
-                }
-                else
-                {
-                    string nextChar = buffer.Substring(numberOfColumns, 1);
-                    string fullLine = buffer.Substring(0, numberOfColumns);
-
-                    if (nextChar == " ")
-                    {
-                        Console.WriteLine(fullLine);
-                        buffer = buffer.Substring(numberOfColumns).Trim();
-                    }
-                    else
-                    {
-                        int lastSpacePosition = buffer.LastIndexOf(' ', numberOfColumns);
-                        Console.WriteLine(buffer.Substring(0, lastSpacePosition));
-                        buffer = buffer.Substring(lastSpacePosition).Trim();
-                    }
-                }
-            }
+            _buffer.AppendLine(buffer);
         }
     }
 }
