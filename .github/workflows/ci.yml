@@ -1,0 +1,30 @@
+name: CI
+
+# Runs the test suite on every PR into main (and on pushes to main). Make the
+# "CI / test" check required in branch protection so PRs can't merge while red.
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # The .sln is gitignored, so it isn't on the runner; target the test project
+      # explicitly (it transitively restores/builds the referenced game project).
+      - name: Restore
+        run: dotnet restore "tests/Tests.csproj"
+
+      - name: Build
+        run: dotnet build "tests/Tests.csproj" --no-restore -c Release
+
+      - name: Test
+        run: dotnet test "tests/Tests.csproj" --no-build -c Release --verbosity normal
