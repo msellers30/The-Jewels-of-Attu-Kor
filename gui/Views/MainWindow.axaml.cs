@@ -10,18 +10,29 @@ namespace Game.Gui.Views
     public partial class MainWindow : Window
     {
         private MainViewModel? _viewModel;
+        private readonly AppSettings _settings = SettingsStore.Load();
 
         public MainWindow()
         {
             InitializeComponent();
 
+            RestoreWindowBounds();
+
             DataContextChanged += (_, _) => HookViewModel();
             Loaded += (_, _) =>
             {
                 HookViewModel();
+                RestoreLayout();
                 ApplyLayout();
                 InputBox.Focus();
             };
+            Closing += (_, _) => SaveSettings();
+        }
+
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            EnsureWindowOnScreen();
         }
 
         private void HookViewModel()
@@ -111,5 +122,80 @@ namespace Game.Gui.Views
 
         private void ScrollTranscriptToEnd() =>
             TranscriptScroller.Offset = TranscriptScroller.Offset.WithY(TranscriptScroller.Extent.Height);
+
+        // --- Window persistence: restore saved size/position/layout on open, save them on close. ---
+
+        private void RestoreWindowBounds()
+        {
+            if (_settings.WindowWidth is { } w && _settings.WindowHeight is { } h)
+            {
+                Width = w;
+                Height = h;
+            }
+
+            if (_settings.WindowX is { } x && _settings.WindowY is { } y)
+            {
+                WindowStartupLocation = WindowStartupLocation.Manual;
+                Position = new PixelPoint(x, y);
+            }
+        }
+
+        private void RestoreLayout()
+        {
+            if (_viewModel is null || _settings.Layout is not { } saved)
+            {
+                return;
+            }
+
+            var option = _viewModel.Layouts.FirstOrDefault(o => o.Mode == saved);
+            if (option is not null)
+            {
+                _viewModel.SelectedLayout = option;
+            }
+        }
+
+        private void SaveSettings()
+        {
+            _settings.WindowX = Position.X;
+            _settings.WindowY = Position.Y;
+            _settings.WindowWidth = ClientSize.Width;
+            _settings.WindowHeight = ClientSize.Height;
+            if (_viewModel is not null)
+            {
+                _settings.Layout = _viewModel.SelectedLayout.Mode;
+            }
+
+            SettingsStore.Save(_settings);
+        }
+
+        // If the saved position lands off every screen (e.g. a monitor was unplugged), recenter on the
+        // primary screen so the window can't get stranded out of view.
+        private void EnsureWindowOnScreen()
+        {
+            try
+            {
+                var screens = Screens;
+                if (screens is null || screens.All.Count == 0)
+                {
+                    return;
+                }
+
+                var topLeft = Position;
+                if (screens.All.Any(s => s.Bounds.Contains(topLeft)))
+                {
+                    return;
+                }
+
+                var target = screens.Primary ?? screens.All[0];
+                var bounds = target.Bounds;
+                Position = new PixelPoint(
+                    bounds.X + Math.Max(0, (bounds.Width - (int)ClientSize.Width) / 2),
+                    bounds.Y + Math.Max(0, (bounds.Height - (int)ClientSize.Height) / 2));
+            }
+            catch
+            {
+                // Screen enumeration is best-effort; never block the window from opening.
+            }
+        }
     }
 }
