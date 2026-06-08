@@ -58,6 +58,13 @@ namespace Game.Gui.Views
             InputBox.Focus();
         }
 
+        private async void OnOpenOptions(object? sender, RoutedEventArgs e)
+        {
+            // Share the same view-model so layout changes in the popup apply to this window live.
+            await new OptionsWindow { DataContext = DataContext }.ShowDialog(this);
+            InputBox.Focus();
+        }
+
         /// <summary>
         /// Arranges the image panel and the content (transcript) panel into the proportional grid for
         /// the selected layout. Uses star sizing so each area is a fixed PERCENTAGE of the window and

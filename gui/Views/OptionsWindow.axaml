@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Game.Gui.ViewModels"
+        x:Class="Game.Gui.Views.OptionsWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Options"
+        Width="340" Height="200"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <StackPanel Margin="20" Spacing="18">
+        <TextBlock Text="Options" FontSize="18" FontWeight="SemiBold" />
+
+        <StackPanel Spacing="6">
+            <TextBlock Text="Window layout" Opacity="0.8" />
+            <ComboBox HorizontalAlignment="Stretch"
+                      ItemsSource="{Binding Layouts}"
+                      SelectedItem="{Binding SelectedLayout}" />
+        </StackPanel>
+
+        <Button Content="Close" HorizontalAlignment="Right" Click="OnClose" />
+    </StackPanel>
+</Window>
