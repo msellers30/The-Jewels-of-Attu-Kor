@@ -39,7 +39,7 @@ namespace Game.Gui.ViewModels
                 new() { Mode = LayoutMode.ImageRight, Label = "Image right" },
                 new() { Mode = LayoutMode.ImageTop,   Label = "Image top"   },
             };
-            _selectedLayout = Layouts[0];
+            _selectedLayout = Layouts.First(option => option.Mode == LayoutMode.ImageLeft);
 
             Render(_engine.Start());
         }
