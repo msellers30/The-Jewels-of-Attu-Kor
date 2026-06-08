@@ -58,30 +58,45 @@ namespace Game.Gui.Views
             InputBox.Focus();
         }
 
-        /// <summary>Positions and sizes the image panel for the selected layout; the transcript fills the rest.</summary>
+        /// <summary>
+        /// Arranges the image panel and the content (transcript) panel into the proportional grid for
+        /// the selected layout. Uses star sizing so each area is a fixed PERCENTAGE of the window and
+        /// resizes live with it: a 50/50 (1*:1*) split between image and transcript.
+        /// </summary>
         private void ApplyLayout()
         {
             var mode = _viewModel?.SelectedLayout.Mode ?? LayoutMode.ImageLeft;
+
+            MainArea.ColumnDefinitions.Clear();
+            MainArea.RowDefinitions.Clear();
+            Grid.SetRow(ImagePanel, 0);
+            Grid.SetColumn(ImagePanel, 0);
+            Grid.SetRow(ContentPanel, 0);
+            Grid.SetColumn(ContentPanel, 0);
+
             switch (mode)
             {
                 case LayoutMode.ImageLeft:
-                    DockPanel.SetDock(ImagePanel, Dock.Left);
-                    ImagePanel.Width = 320;
-                    ImagePanel.Height = double.NaN;
+                    MainArea.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+                    MainArea.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+                    Grid.SetColumn(ImagePanel, 0);
+                    Grid.SetColumn(ContentPanel, 1);
                     ImagePanel.Margin = new Thickness(0, 0, 10, 0);
                     break;
 
                 case LayoutMode.ImageRight:
-                    DockPanel.SetDock(ImagePanel, Dock.Right);
-                    ImagePanel.Width = 320;
-                    ImagePanel.Height = double.NaN;
+                    MainArea.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+                    MainArea.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+                    Grid.SetColumn(ContentPanel, 0);
+                    Grid.SetColumn(ImagePanel, 1);
                     ImagePanel.Margin = new Thickness(10, 0, 0, 0);
                     break;
 
                 case LayoutMode.ImageTop:
-                    DockPanel.SetDock(ImagePanel, Dock.Top);
-                    ImagePanel.Width = double.NaN;
-                    ImagePanel.Height = 240;
+                    MainArea.RowDefinitions.Add(new RowDefinition(1, GridUnitType.Star));
+                    MainArea.RowDefinitions.Add(new RowDefinition(1, GridUnitType.Star));
+                    Grid.SetRow(ImagePanel, 0);
+                    Grid.SetRow(ContentPanel, 1);
                     ImagePanel.Margin = new Thickness(0, 0, 0, 10);
                     break;
             }

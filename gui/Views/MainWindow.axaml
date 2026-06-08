@@ -3,7 +3,7 @@
         xmlns:vm="clr-namespace:Game.Gui.ViewModels"
         x:Class="Game.Gui.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Width="900" Height="600"
+        Width="1400" Height="526"
         MinWidth="560" MinHeight="400"
         Title="The Jewels of Attu-Kor">
 
@@ -19,17 +19,17 @@
             </StackPanel>
         </Border>
 
-        <!-- Main area. The image docks Left/Right/Top (set in code-behind from SelectedLayout);
-             the transcript+input grid is the fill child and takes the remaining space. -->
-        <DockPanel x:Name="MainArea" Margin="10">
+        <!-- Main area. Image + transcript are placed in a proportional (star-sized) grid; code-behind
+             (ApplyLayout) sets the rows/columns per SelectedLayout, so the image is a percentage of the
+             window and resizes with it. -->
+        <Grid x:Name="MainArea" Margin="10">
 
             <Border x:Name="ImagePanel"
-                    Width="320"
                     BorderBrush="#55FFFFFF" BorderThickness="1" CornerRadius="6"
                     Background="#10FFFFFF">
                 <Panel>
                     <Image Source="{Binding RoomImage}" IsVisible="{Binding HasImage}"
-                           Stretch="Uniform" Margin="6" />
+                           Stretch="Uniform" VerticalAlignment="Top" Margin="6" />
                     <Border IsVisible="{Binding !HasImage}" Padding="16">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
                             <TextBlock Text="🖼" FontSize="52" Opacity="0.4" HorizontalAlignment="Center" />
@@ -42,7 +42,7 @@
                 </Panel>
             </Border>
 
-            <Grid RowDefinitions="*,Auto">
+            <Grid x:Name="ContentPanel" RowDefinitions="*,Auto">
                 <ScrollViewer x:Name="TranscriptScroller" Grid.Row="0"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
@@ -65,6 +65,6 @@
                 </Grid>
             </Grid>
 
-        </DockPanel>
+        </Grid>
     </DockPanel>
 </Window>
