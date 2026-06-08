@@ -1,5 +1,7 @@
 # The Jewels of Attu-Kor
 
+Status: [![CI](https://github.com/msellers30/The-Jewels-of-Attu-Kor/actions/workflows/ci.yml/badge.svg)](https://github.com/msellers30/The-Jewels-of-Attu-Kor/actions/workflows/ci.yml)
+
 A classic text adventure game in the tradition of Infocom titles like *Zork* and *Planetfall*. Explore a strange world of hotel lobbies, dark alleys, retro arcades, and ancient temples as you search for the legendary Jewels of Attu-Kor.
 
 ## Download and Run
